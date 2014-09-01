@@ -1,0 +1,31 @@
+{
+  "name": "nickleby.js",
+  "version": "0.0.1",
+  "description": "A Javascript interface to the NCBI eUtilties (http://www.ncbi.nlm.nih.gov/books/NBK25499/)",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "jquery": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ejstronge/nickleby.js.git"
+  },
+  "keywords": [
+    "ncbi",
+    "pubmed",
+    "medline"
+  ],
+  "author": "Edward J. Stronge <ejstronge@gmail.com> (http://ejstronge.net/)",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/ejstronge/nickleby.js/issues"
+  },
+  "homepage": "https://github.com/ejstronge/nickleby.js"
+}

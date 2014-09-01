@@ -50,11 +50,18 @@ var makeSearchObject = function(search_options) {
       },
       search_params = $.extend({}, default_search_params, search_options);
 
+  /**
+   * Get or set an attribute on this SearchObject. 
+   *                                                            
+   * Only attributes which are present in default_search_params
+   * may be set with this function.
+   *
+   * @param {String} attr - Attribute to be returned or modified.
+   * @param {String} [new_val] - When specified, the new value of attr.
+   * @return {String|Number|Object} Returns either the value of attr if new_val isn't specified or `this`.
+   *
+   */
   var searchParam = function(attr, new_val) {
-    // Get or set an attribute on this SearchObject. 
-    //
-    // Only attributes which are present in default_search_params
-    // may be set with this function.
     if (!(attr in default_search_params)) {
       console.log("quitting since " + attr + " is an invalid property");
       throw {
