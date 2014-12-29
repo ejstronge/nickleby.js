@@ -7,13 +7,9 @@
  */
 var makeSearchObject = function(searchOptions) {
   var that = this,
-      //
-      // dead_time - period in milliseconds where you may not send a
-      // second request to NCBI's E-Utilities. Please don't disable
-      // rate-limiting
-      dead_time = 3333,
-      search_url = 'esearch.fcgi?',
-      default_search_params = {
+      eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
+      searchUrl = 'esearch.fcgi?',
+      defaultSearchParams = {
         //
         // Search parameters
         'db': null, // Database to search
@@ -52,21 +48,21 @@ var makeSearchObject = function(searchOptions) {
         'mindate': '',
         'maxdate': '',
       },
-      search_params = $.extend({}, default_search_params, searchOptions);
+      allSearchParams = $.extend({}, defaultSearchParams, searchOptions);
 
   /**
    * Get or set an attribute on this SearchObject. 
    *                                                            
-   * Only attributes which are present in default_search_params
+   * Only attributes which are present in defaultSearchParams
    * may be set with this function.
    *
    * @param {String} attr - Attribute to be returned or modified.
-   * @param {String} [new_val] - When specified, the new value of attr.
-   * @return {String|Number|Object} Returns either the value of attr if new_val isn't specified or `this`.
+   * @param {String} [newVal] - When specified, the new value of attr.
+   * @return {String|Number|Object} Returns either the value of attr if newVal isn't specified or `this`.
    *
    */
-  var searchParam = function(attr, new_val) {
-    if (!(attr in default_search_params)) {
+  var searchParam = function(attr, newVal) {
+    if (!(attr in defaultSearchParams)) {
       console.log("quitting since " + attr + " is an invalid property");
       throw {
         name: 'TypeError',
@@ -74,16 +70,20 @@ var makeSearchObject = function(searchOptions) {
       };
     }
     if (arguments.length == 2) {
-      search_params[attr] = new_val; 
+      allSearchParams[attr] = newVal; 
       return this;
     } else {
-      return search_params[attr];
+      return allSearchParams[attr];
     }
   };
 
+  /**
+   * Construct a URL from the parameters used to create
+   * this search object
+   */
   var getQueryUrl = function() {
-    if (!search_params.term || 
-        !(search_params.db in databases)) {
+    if (!allSearchParams.term || 
+        !(allSearchParams.db in databases)) {
       throw {
         name: 'TypeError',
         message: 'A valid DB and term are required',
@@ -93,59 +93,73 @@ var makeSearchObject = function(searchOptions) {
     // TODO Terms should be allowed to be a group of [string, string] tuples
     // to handle the case where a user wants to restrict each of multiple
     // terms to specific fields
-    if (search_params.webenv !== '' || search_params.query_key !== '') {
+    if (allSearchParams.webenv !== '' || allSearchParams.query_key !== '') {
       // This is only set when needed
-      search_params.usehistory = 'y';
+      allSearchParams.usehistory = 'y';
     }
 
-    final_params = {};
-    $.each(search_params, function(key, value) {
-      if (!!value) final_params[key] = value;
+    finalParams = {};
+    $.each(allSearchParams, function(key, value) {
+      if (!!value) finalParams[key] = value;
       return true;
     });
-    return eutil_base + search_url + $.param(final_params);
+    return eutil_base + searchUrl + $.param(finalParams);
   };
 
+  /*
+   * Send a request to NCBI, using the parameters used to
+   * construct this search object. A request is only sent
+   * if an appropriate time has elapsed since the previous
+   * request (see getSearchData.deadTime)
+   */
   var getSearchData = function() {
-    // If an appropriate time has elapsed since the last request,
-    // make a new ajax call.
 
-    var query_data = {};
-    var doSubmission = function() {
-      // Submit the query specified by the parameters, returning
-      // a results object. 
-      $.ajax({
-        url: getQueryUrl(),
-        type: "GET",
-        dataType: "json",
-        success: function(json){
-          query_data = json;
-        }
-      });
-    };
+    var that = this,
+        // deadTime - period in milliseconds where you may not send a
+        // second request to NCBI's E-Utilities. Please don't disable
+        // rate-limiting
+        deadTime = 3333,
+        // lastRequest - time of last request
+        lastRequest = (new Date()).getTime(),
+        queryData = {},
+        doSubmission = function() {
+          // Submit the query specified by the parameters, returning
+          // a results object. 
+          $.ajax({
+            url: getQueryUrl(),
+            type: "GET",
+            dataType: "json",
+            success: function(json){
+              that.queryData = json;
+            }
+          });
+        };
 
-    if (( (new Date()).getTime() - last_request ) < dead_time) {
+    if (( (new Date()).getTime() - lastRequest) < deadTime) {
       // Pausing due to NCBI rate limits...
       setTimeout(function() {
-        last_request = (new Date()).getTime();
-        doSubmission();
-      }, dead_time);
+        that.lastRequest = (new Date()).getTime();
+        that.doSubmission();
+      }, deadTime);
     } else {
-      last_request = (new Date()).getTime();
+      lastRequest = (new Date()).getTime();
       doSubmission();
     }
+
     return {
-      'query_response': query_data,
-      'search_params': search_params,
+      'queryData': queryData,
+      'allSearchParams': allSearchParams,
     };
   };
+
   return {
     'searchParam': searchParam,
     'getSearchData': getSearchData,
+
     // XXX debugging only
     '__getQueryUrl': getQueryUrl,
     '__logAllParams': function() {
-      return search_params;
+      return allSearchParams;
     },
   };
 };

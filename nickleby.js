@@ -7,7 +7,6 @@ module.exports = (function() {
   var toolname = 'nickleby.js',
       author_email = 'nickleby.js@gmail.com',
       last_request = 0,
-      eutil_base = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       // Using a makeshift set; ignore the values for the databases keys
       databases = {'bioproject':1, 'biosample':1, 'biosystems':1, 'books':1, 'cdd':1,
                    'gap':1, 'dbvar':1, 'epigenomics':1, 'nucest':1, 'gene':1, 'genome':1,
