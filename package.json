@@ -2,7 +2,7 @@
   "name": "nickleby.js",
   "version": "0.0.1",
   "description": "A Javascript interface to the NCBI eUtilties (http://www.ncbi.nlm.nih.gov/books/NBK25499/)",
-  "main": "index.js",
+  "main": "nickleby.js",
   "directories": {
     "test": "test"
   },
