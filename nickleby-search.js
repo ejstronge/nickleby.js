@@ -1,7 +1,11 @@
 ////////////////////////////////////////////////////////////////////////
 // Searching
 ////////////////////////////////////////////////////////////////////////
-var makeSearchObject = function(search_options) {
+/** 
+ * Encapsulates search information and functionality
+ * @param {object} searchOptions - settings for the planned NCBI search
+ */
+var makeSearchObject = function(searchOptions) {
   var that = this,
       //
       // dead_time - period in milliseconds where you may not send a
@@ -48,7 +52,7 @@ var makeSearchObject = function(search_options) {
         'mindate': '',
         'maxdate': '',
       },
-      search_params = $.extend({}, default_search_params, search_options);
+      search_params = $.extend({}, default_search_params, searchOptions);
 
   /**
    * Get or set an attribute on this SearchObject. 
