@@ -1,6 +1,6 @@
 {
   "name": "nickleby.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Javascript interface to the NCBI eUtilties (http://www.ncbi.nlm.nih.gov/books/NBK25499/)",
   "main": "nickleby.js",
   "directories": {
@@ -9,7 +9,10 @@
   "dependencies": {
     "jquery": "^2.1.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jsdom": "^1.0.0-pre.3",
+    "browserify": "^5.11.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -6,8 +6,11 @@
  * @param {object} searchOptions - settings for the planned NCBI search
  */
 var makeSearchObject = function(searchOptions) {
-  var that = this,
-      eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
+  var jquery = require('jquery'),
+      $ = jquery(
+        typeof window === undefined ? window : require('jsdom').jsdom().parentWindow);
+
+  var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',
       defaultSearchParams = {
         //

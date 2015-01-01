@@ -1,0 +1,16 @@
+
+
+Nickleby.js version 0.0.2, development
+======================================
+
+New functionality
+-----------------
+
+
+Bug fixes
+---------
+
+* Added jsdom and browserify as development dependencies
+* JQuery is loaded properly by each module, irrespective of the javascript environment
+
+
