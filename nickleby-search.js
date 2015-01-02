@@ -12,6 +12,14 @@ var makeSearchObject = function(searchOptions) {
 
   var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',
+      // Using a makeshift set; ignore the values for the databases keys
+      databases = {'bioproject':1, 'biosample':1, 'biosystems':1, 'books':1, 'cdd':1,
+                   'gap':1, 'dbvar':1, 'epigenomics':1, 'nucest':1, 'gene':1, 'genome':1,
+                   'gds':1, 'geoprofiles':1, 'nucgss':1, 'homologene':1, 'mesh':1,
+                   'toolkit':1, 'ncbisearch':1, 'nlmcatalog':1, 'nuccore':1, 'omia':1,
+                   'popset':1, 'probe':1, 'protein':1, 'proteinclusters':1, 'pcassay':1,
+                   'pccompound':1, 'pcsubstance':1, 'pubmed':1, 'pmc':1, 'snp':1, 'sra':1,
+                   'structure':1, 'taxonomy':1, 'unigene':1, 'unists':1},
       defaultSearchParams = {
         //
         // Search parameters
@@ -106,7 +114,7 @@ var makeSearchObject = function(searchOptions) {
       if (!!value) finalParams[key] = value;
       return true;
     });
-    return eutil_base + searchUrl + $.param(finalParams);
+    return eutilBase + searchUrl + $.param(finalParams);
   };
 
   /*
