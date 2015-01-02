@@ -85,7 +85,7 @@ var makeSearchObject = function(searchOptions) {
    * this search object
    */
   var getQueryUrl = function() {
-    if (!allSearchParams.term || 
+    if (!allSearchParams.term &&
         !(allSearchParams.db in databases)) {
       throw {
         name: 'TypeError',
