@@ -6,9 +6,25 @@
  * @param {object} searchOptions - settings for the planned NCBI search
  */
 var makeSearchObject = function(searchOptions) {
+
   var jquery = require('jquery'),
-      $ = jquery(
-        typeof window === undefined ? window : require('jsdom').jsdom().parentWindow);
+      $;
+
+  // Give jQuery a special window if it's running in node.js
+  if (typeof window === 'undefined') {
+    $ = jquery(require('jsdom').jsdom().parentWindow);
+
+    // In node.js, jQuery.ajax calls fail. Will replace the XHR method
+    // with a built-in version (see http://stackoverflow.com/a/8916217)
+    var XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+
+    $.support.cors = true;
+    $.ajaxSettings.xhr = function() {
+        return new XMLHttpRequest();
+    };
+  } else {
+    $ = jquery(window);
+  }
 
   var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',

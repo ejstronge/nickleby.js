@@ -9,8 +9,11 @@
   "dependencies": {
     "jquery": "^2.1.1"
   },
+  // asn1.js, a dependency of xmlhttprequest, fails to install on
+  // node v0.10.32
   "devDependencies": {
     "jsdom": "^1.0.0-pre.3",
+    "xmlhttprequest": "^1.6.0",
     "browserify": "^5.11.0"
   },
   "scripts": {
