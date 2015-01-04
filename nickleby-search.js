@@ -141,14 +141,15 @@ var makeSearchObject = function(searchOptions) {
    */
   var getSearchData = function() {
 
-    var that = this,
-        // deadTime - period in milliseconds where you may not send a
-        // second request to NCBI's E-Utilities. Please don't disable
-        // rate-limiting
+    var searchData = {},
+
+        // deadTime - minimal required interval, in milliseconds, 
+        // between requests to the NCBI E-Utilities
         deadTime = 3333,
+
         // lastRequest - time of last request
-        lastRequest = (new Date()).getTime(),
-        queryData = {},
+        lastRequest = 0,
+
         doSubmission = function() {
           // Submit the query specified by the parameters, returning
           // a results object. 
@@ -157,25 +158,26 @@ var makeSearchObject = function(searchOptions) {
             type: "GET",
             dataType: "json",
             success: function(json){
-              that.queryData = json;
+              searchData = json;
             }
           });
         };
 
-    if (( (new Date()).getTime() - lastRequest) < deadTime) {
-      // Pausing due to NCBI rate limits...
-      setTimeout(function() {
-        that.lastRequest = (new Date()).getTime();
-        that.doSubmission();
-      }, deadTime);
-    } else {
+    // Do we need to pause to respect the NCBI rate limits?
+    if (( lastRequest - (new Date()).getTime() ) < -deadTime) {
       lastRequest = (new Date()).getTime();
       doSubmission();
+    } else {
+      // TODO Make a unit test for this case
+      setTimeout(function() {
+        lastRequest = (new Date()).getTime();
+        doSubmission();
+      }, deadTime);
     }
 
     return {
-      'queryData': queryData,
-      'allSearchParams': allSearchParams,
+      'searchData': searchData,
+      'allSearchParams': allSearchParams
     };
   };
 
