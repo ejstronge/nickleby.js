@@ -141,7 +141,7 @@ var makeSearchObject = function(searchOptions) {
    */
   var getSearchData = function() {
 
-    var searchData = {},
+    var searchData = {allSearchParams: allSearchParams},
 
         // deadTime - minimal required interval, in milliseconds, 
         // between requests to the NCBI E-Utilities
@@ -157,8 +157,16 @@ var makeSearchObject = function(searchOptions) {
             url: getQueryUrl(),
             type: "GET",
             dataType: "json",
-            success: function(json){
-              searchData = json;
+            success: function(json) {
+              return (function() {
+                this.searchData = json;
+              }).call(searchData);
+            },
+            error: function(e) {
+              return (function(){
+                console.log(e.statusText);
+                this.answers = null;
+              }).call(searchData);
             }
           });
         };
@@ -175,10 +183,7 @@ var makeSearchObject = function(searchOptions) {
       }, deadTime);
     }
 
-    return {
-      'searchData': searchData,
-      'allSearchParams': allSearchParams
-    };
+    return searchData;
   };
 
   return {
