@@ -7,7 +7,7 @@ module.exports = (function() {
   var jquery = require('jquery'),
       // Load jsdom if this script is running in Node
       $ = jquery(
-        typeof window === 'undefined' ? window : require('jsdom').jsdom().parentWindow),
+        typeof window === 'undefined' ? require('jsdom').jsdom().parentWindow : window),
       toolname = 'nickleby.js',
       author_email = 'nickleby.js@gmail.com',
       last_request = 0;
