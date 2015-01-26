@@ -91,10 +91,7 @@ var makeSearchObject = function(searchOptions) {
   var searchParam = function(attr, newVal) {
     if (!(attr in defaultSearchParams)) {
       console.log("quitting since " + attr + " is an invalid property");
-      throw {
-        name: 'TypeError',
-        message: 'Received invalid attribute ' + attr + '.',
-      };
+      throw new TypeError('Received invalid attribute ' + attr + '.');
     }
     if (arguments.length == 2) {
       allSearchParams[attr] = newVal; 
@@ -111,10 +108,7 @@ var makeSearchObject = function(searchOptions) {
   var getQueryUrl = function() {
     if (!allSearchParams.term &&
         !(allSearchParams.db in databases)) {
-      throw {
-        name: 'TypeError',
-        message: 'A valid DB and term are required',
-      };
+      throw new TypeError('A valid DB and term are required');
     }
 
     // TODO Terms should be allowed to be a group of [string, string] tuples

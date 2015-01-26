@@ -60,10 +60,7 @@ module.exports = (function() {
     } else if (typeof term_or_searchObject == 'object') {
       search_object = makeSearchObject(term_or_searchObject);
     } else {
-      throw {
-        name: 'TypeError',
-        message: 'search requires either a string or an object'
-      };
+      throw new TypeError('search requires either a string or an object');
     }
 
     if (delaySubmission) {
