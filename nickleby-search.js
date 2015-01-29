@@ -8,6 +8,7 @@
 var makeSearchObject = function(searchOptions) {
 
   var jquery = require('jquery'),
+      Q = require('q'),
       $;
 
   // Give jQuery a special window if it's running in node.js
@@ -70,16 +71,29 @@ var makeSearchObject = function(searchOptions) {
         'field': null,
         //
         // Date parameters
+        //  mindate and maxdate may be specfied as YYYY/MM/DD, YYYY, or YYYY/MM
         'datetype': '',
         'reldate': '',
         'mindate': '',
         'maxdate': '',
       },
-      allSearchParams = $.extend({}, defaultSearchParams, searchOptions);
+      allSearchParams = $.extend({}, defaultSearchParams, searchOptions),
+      searchResults = {
+        // True after query submission. Resets to false when any parameters change
+        'submitted': false,
+        'success': null,
+        // If a search succeeds, searchResults.data will be contain the 
+        // results. Otherwise, it will contain an error message, if 
+        // one was available.
+        //
+        // Note the search data may indicate a failed search due to inappropriate
+        // parameters. Such a situation is *not* handled in the library.
+        'data': {}
+      };
 
   /**
-   * Get or set an attribute on this SearchObject. 
-   *                                                            
+   * Get or set an attribute on this SearchObject.
+   *
    * Only attributes which are present in defaultSearchParams
    * may be set with this function.
    *
@@ -110,7 +124,6 @@ var makeSearchObject = function(searchOptions) {
         !(allSearchParams.db in databases)) {
       throw new TypeError('A valid DB and term are required');
     }
-
     // TODO Terms should be allowed to be a group of [string, string] tuples
     // to handle the case where a user wants to restrict each of multiple
     // terms to specific fields
@@ -118,77 +131,64 @@ var makeSearchObject = function(searchOptions) {
       // This is only set when needed
       allSearchParams.usehistory = 'y';
     }
-
     finalParams = {};
+    // Shorten the final url by leaving out false-y keys
     $.each(allSearchParams, function(key, value) {
-      if (!!value) finalParams[key] = value;
+      if (!!value) {
+        finalParams[key] = value;
+      }
       return true;
     });
     return eutilBase + searchUrl + $.param(finalParams);
   };
 
-  /*
-   * Send a request to NCBI, using the parameters used to
-   * construct this search object. A request is only sent
-   * if an appropriate time has elapsed since the previous
-   * request (see getSearchData.deadTime)
-   */
-  var getSearchData = function() {
-
-    var searchData = {allSearchParams: allSearchParams},
-
-        // deadTime - minimal required interval, in milliseconds, 
-        // between requests to the NCBI E-Utilities
-        deadTime = 3333,
-
-        // lastRequest - time of last request
-        lastRequest = 0,
-
-        doSubmission = function() {
-          // Submit the query specified by the parameters, returning
-          // a results object. 
-          $.ajax({
+  var getSearchResults = function() {
+    if (searchResults.submitted) {
+      return searchResults;
+    } else {
+      // TODO With Q, it should be easy to add a delay to respect NCBI rate limits
+      return Q($.ajax({
             url: getQueryUrl(),
             type: "GET",
-            dataType: "json",
-            success: function(json) {
-              return (function() {
-                this.searchData = json;
-              }).call(searchData);
-            },
-            error: function(e) {
-              return (function(){
-                console.log(e.statusText);
-                this.answers = null;
-              }).call(searchData);
-            }
-          });
-        };
-
-    // Do we need to pause to respect the NCBI rate limits?
-    if (( lastRequest - (new Date()).getTime() ) < -deadTime) {
-      lastRequest = (new Date()).getTime();
-      doSubmission();
-    } else {
-      // TODO Make a unit test for this case
-      setTimeout(function() {
-        lastRequest = (new Date()).getTime();
-        doSubmission();
-      }, deadTime);
+            dataType: "json"
+          }))
+        .fin(function() {searchResults.submitted = true;})
+        .then(function(data) {
+          searchResults.success = true;
+          searchResults.data = data;
+          return searchResults;
+        })
+        .fail(function(e) {
+          console.log(e);
+          searchResults.success = false;
+          searchResults.data = e.message;
+          return searchResults;
+        });
     }
-
-    return searchData;
   };
 
   return {
+    // Get or set an attribute on this SearchObject. 
+    //                                                            
+    // Only attributes which are present in defaultSearchParams
+    // may be set with this function.
     'searchParam': searchParam,
-    'getSearchData': getSearchData,
 
-    // XXX debugging only
+    // getSearchResults always returns a promise. Thus, callers won't be able to access
+    // searchResults before results are ready.
+    'getSearchResults': function() {
+      if (!searchResults.submitted) {
+        return getSearchResults();
+      } else {
+      return Q(searchResults);
+      }
+    },
+
+    // XXX For debugging only
     '__getQueryUrl': getQueryUrl,
     '__logAllParams': function() {
       return allSearchParams;
-    },
+    }
   };
 };
 
