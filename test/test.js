@@ -9,7 +9,24 @@ var assert = require('assert'),
     nickleby = require('../nickleby'),
     Q = require('q');
 
-describe('nickleby.advancedSearchObject', function() {
+describe('nickleby.makeSearchObject', function() {
+
+  describe('instantiation', function() {
+
+    it('should accept parameters from a previously-run advancedSearch', function() {
+      var searchObject = nickleby.advancedSearch()
+        .searchParam('term', 'NCC')
+        .searchParam('db', 'pubmed');
+      nickleby.search(searchObject);
+      assert.doesNotThrow(
+        function() {nickleby.search(searchObject);},
+        /TypeError/,
+        "Could not initiate a search using a previously-created searchObject"
+      );
+    });
+
+  });
+
   describe('#searchParam()', function() {
 
     var candidateSearchObject = nickleby.advancedSearch(),
@@ -113,7 +130,7 @@ describe('nickleby.advancedSearchObject', function() {
 
       searchObjectWithHistory.__getQueryUrl();
 
-      assert.strictEqual('y', searchObjectWithHistory.__logAllParams().usehistory);
+      assert.strictEqual('y', searchObjectWithHistory.getAllSearchParams().usehistory);
     });
 
 

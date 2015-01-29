@@ -27,6 +27,8 @@ var makeSearchObject = function(searchOptions) {
     $ = jquery(window);
   }
 
+  searchOptions = searchOptions || {};
+
   var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',
       // Using a makeshift set; ignore the values for the databases keys
@@ -73,7 +75,11 @@ var makeSearchObject = function(searchOptions) {
         'mindate': '',
         'maxdate': '',
       },
-      allSearchParams = $.extend({}, defaultSearchParams, searchOptions),
+      allSearchParams = $.extend(
+          {},
+          defaultSearchParams,
+          // If we're passed an advanced search object, extract its parameters
+          'getAllSearchParams' in searchOptions ? searchOptions.getAllSearchParams() : searchOptions),
       searchResults = {
         // True after query submission. Resets to false when any parameters change
         'submitted': false,
@@ -184,12 +190,12 @@ var makeSearchObject = function(searchOptions) {
       return Q(searchResults);
       }
     },
+    'getAllSearchParams': function() {
+      return $.extend({}, allSearchParams);
+    },
 
     // XXX For debugging only
-    '__getQueryUrl': getQueryUrl,
-    '__logAllParams': function() {
-      return allSearchParams;
-    }
+    '__getQueryUrl': getQueryUrl
   };
 };
 
