@@ -9,10 +9,10 @@ var assert = require('assert'),
     nickleby = require('../nickleby'),
     Q = require('q');
 
-describe('searchObject', function() {
+describe('nickleby.advancedSearchObject', function() {
   describe('#searchParam()', function() {
 
-    var candidateSearchObject = nickleby.makeSearchObject(),
+    var candidateSearchObject = nickleby.advancedSearch(),
         parameterSet = [
           ['db', 'pubmed'],
           ['term', 'neural crest'],
@@ -51,7 +51,7 @@ describe('searchObject', function() {
     });
 
     it('should set new parameters and return a searchObject', function() {
-      var referenceSearchObject = nickleby.makeSearchObject(),
+      var referenceSearchObject = nickleby.advancedSearch(),
           candidateSearchObject = populateCandidateSearchObject();
       // This function checks for the presence of the searchObject public API in candidate
       // searchObjects.
@@ -68,7 +68,7 @@ describe('searchObject', function() {
     });
 
     it('should reject invalid parameter names', function() {
-      var searchObject = nickleby.makeSearchObject();
+      var searchObject = nickleby.advancedSearch();
 
       assert.throws(
         function() {searchObject.searchParam('Douglas Adams', '42');},
@@ -77,7 +77,7 @@ describe('searchObject', function() {
     });
 
     it('should reject currently unsupported NCBI databases', function() {
-      var searchObject = nickleby.makeSearchObject();
+      var searchObject = nickleby.advancedSearch();
 
       assert.throws(
         function() {searchObject.searchParam('db', 'pubmedx');},
@@ -94,7 +94,7 @@ describe('searchObject', function() {
           testParameters = [['db', 'pubmed', 'missing search term'], ['term', 'NCC', 'missing target database']];
 
       for (var i = 0; i < testParameters.length; i++) {
-        searchObject = nickleby.makeSearchObject();
+        searchObject = nickleby.advancedSearch();
         searchObject.searchParam.apply(searchObject, testParameters[i]);
         assert.throws(
           searchObject.__getQueryUrl,
@@ -105,7 +105,7 @@ describe('searchObject', function() {
     });
 
     it('should set the usehistory flag as appropriate', function() {
-      var searchObjectWithHistory = nickleby.makeSearchObject()
+      var searchObjectWithHistory = nickleby.advancedSearch()
         .searchParam('db', 'pubmed')
         .searchParam('term', 'NCC')
         .searchParam('webenv', '123456')
@@ -129,7 +129,7 @@ describe('searchObject', function() {
   describe('#getSearchResults', function() {
 
     it('should log its progress', function() {
-      var searchObject = nickleby.makeSearchObject()
+      var searchObject = nickleby.advancedSearch()
         .searchParam('db', 'pubmed')
         .searchParam('term', 'NCC')
         .getSearchResults();
