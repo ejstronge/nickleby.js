@@ -30,16 +30,12 @@ var makeSearchObject = function(searchOptions) {
   var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',
       // Using a makeshift set; ignore the values for the databases keys
-      databases = {'bioproject':1, 'biosample':1, 'biosystems':1, 'books':1, 'cdd':1,
-                   'gap':1, 'dbvar':1, 'epigenomics':1, 'nucest':1, 'gene':1, 'genome':1,
-                   'gds':1, 'geoprofiles':1, 'nucgss':1, 'homologene':1, 'mesh':1,
-                   'toolkit':1, 'ncbisearch':1, 'nlmcatalog':1, 'nuccore':1, 'omia':1,
-                   'popset':1, 'probe':1, 'protein':1, 'proteinclusters':1, 'pcassay':1,
-                   'pccompound':1, 'pcsubstance':1, 'pubmed':1, 'pmc':1, 'snp':1, 'sra':1,
-                   'structure':1, 'taxonomy':1, 'unigene':1, 'unists':1},
+      // XXX More databases will be supported over time!
+      databases = {'pubmed':1},
       defaultSearchParams = {
-        //
-        // Search parameters
+
+        // See http://www.ncbi.nlm.nih.gov/books/NBK25499/ for details unless otherwise noted
+
         'db': null, // Database to search
         'term': null, // Search query
         //
@@ -109,6 +105,12 @@ var makeSearchObject = function(searchOptions) {
     }
     if (arguments.length == 2) {
       allSearchParams[attr] = newVal; 
+
+      // Don't allow the user to set incorrect database values
+      if (attr === 'db' && !(newVal in databases)) { 
+        throw new TypeError('Unrecognized NCBI database: ' + newVal);
+      }
+      searchResults.submitted = false;
       return this;
     } else {
       return allSearchParams[attr];
@@ -120,9 +122,8 @@ var makeSearchObject = function(searchOptions) {
    * this search object
    */
   var getQueryUrl = function() {
-    if (!allSearchParams.term &&
-        !(allSearchParams.db in databases)) {
-      throw new TypeError('A valid DB and term are required');
+    if (!allSearchParams.term || !allSearchParams.db) {
+      throw new TypeError('Please specify both a search term and an NCBI database.');
     }
     // TODO Terms should be allowed to be a group of [string, string] tuples
     // to handle the case where a user wants to restrict each of multiple
