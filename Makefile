@@ -6,3 +6,8 @@ build:
 
 clean:
 	@rm debug-ncbi.js index.js
+
+test:
+	./node_modules/.bin/mocha --reporter list
+
+.PHONY: test
