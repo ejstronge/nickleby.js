@@ -17,20 +17,22 @@ module.exports = (function() {
   ////////////////////////////////////////////////////////////////////////
 
   var advancedSearch = require('./nickleby-search.js'),
-      search = function(term_or_searchObject, delaySubmission) {
-        var search_object;
+      search = function(term_or_searchObject, ncbiDatabase) {
+        var searchObject;
 
-        if (typeof term_or_searchObject === 'string') {
-          // XXX Should do a global query here since the user hasn't
-          // specified a specific database
-          search_object = advancedSearch({'term': term_or_searchObject});
-        } else if (typeof term_or_searchObject == 'object') {
-          search_object = advancedSearch(term_or_searchObject);
+        if ((typeof term_or_searchObject === 'string') && (ncbiDatabase !== null)) {
+          searchObject = advancedSearch(
+              {'term': term_or_searchObject,
+               'database': ncbiDatabase
+              }
+          );
+        } else if (typeof term_or_searchObject === 'object') {
+          searchObject = advancedSearch(term_or_searchObject);
         } else {
-          throw new TypeError('search requires either a string or an object');
+          throw new TypeError('Please supply a search term and target NCBI database.');
         }
 
-        return search_object.getSearchResults();
+        return searchObject.getSearchResults();
       };
 
   ////////////////////////////////////////////////////////////////////////
