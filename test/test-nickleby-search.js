@@ -11,50 +11,58 @@ var assert = require('assert'),
 
 describe('nickleby.makeSearchObject', function() {
 
+  var parameterSet = [
+        ['db', 'pubmed'],
+        ['term', 'neural crest'],
+        ['webenv', '123456'],
+        ['query_key', 'ABCDEFG'],
+        ['retstart', '1000'],
+        ['retmax', '20'],
+        ['rettype', 'uilist'],
+        ['retmode', 'json'],
+        ['sort', 'Last Author'],
+        ['field', 'Affiliation'],
+        ['datetype', 'pdat'],
+        ['reldate', '500'],
+        ['mindate', '2009/11/11'],
+        ['maxdate', '50'],
+      ],
+      populateCandidateSearchObject = function(initialSearchObject) {
+
+        if (initialSearchObject === undefined) {
+          initialSearchObject = nickleby.advancedSearch();
+        }
+        parameterSet.reduce(
+            function(modifiedSearchObject, params) {
+              return modifiedSearchObject.searchParam.apply(modifiedSearchObject, params);
+            },
+            initialSearchObject);
+        return initialSearchObject;
+      };
+
   describe('instantiation', function() {
 
     it('should accept parameters from a previously-run advancedSearch', function() {
-      var searchObject = nickleby.advancedSearch()
-        .searchParam('term', 'NCC')
-        .searchParam('db', 'pubmed');
-      nickleby.search(searchObject);
+      var newObject,
+          searchObject = populateCandidateSearchObject();
+
+      newObject = nickleby.advancedSearch(searchObject);
+
       assert.doesNotThrow(
-        function() {nickleby.search(searchObject);},
+        function() {nickleby.advancedSearch(searchObject);},
         /TypeError/,
         "Could not initiate a search using a previously-created searchObject"
       );
+      for (var paramIndex = 0; paramIndex < parameterSet.length; paramIndex++) {
+        paramName = parameterSet[paramIndex][0];
+        paramValue = parameterSet[paramIndex][1];
+        assert.strictEqual(paramValue, newObject.searchParam(paramName));
+      }
     });
 
   });
 
   describe('#searchParam()', function() {
-
-    var candidateSearchObject = nickleby.advancedSearch(),
-        parameterSet = [
-          ['db', 'pubmed'],
-          ['term', 'neural crest'],
-          ['webenv', '123456'],
-          ['query_key', 'ABCDEFG'],
-          ['retstart', '1000'],
-          ['retmax', '20'],
-          ['rettype', 'uilist'],
-          ['retmode', 'json'],
-          ['sort', 'Last Author'],
-          ['field', 'Affiliation'],
-          ['datetype', 'pdat'],
-          ['reldate', '500'],
-          ['mindate', '2009/11/11'],
-          ['maxdate', '50'],
-        ],
-        populateCandidateSearchObject = function() {
-
-          parameterSet.reduce(
-              function(modifiedSearchObject, params) {
-                return modifiedSearchObject.searchParam.apply(modifiedSearchObject, params);
-              }, 
-              candidateSearchObject);
-          return candidateSearchObject;
-        };
 
     it('should return previously set parameters', function() {
       var searchObject = populateCandidateSearchObject(),
