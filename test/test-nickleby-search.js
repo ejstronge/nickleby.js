@@ -116,7 +116,10 @@ describe('nickleby.makeSearchObject', function() {
 
     it('should require both term and database values', function() {
       var searchObject,
-          testParameters = [['db', 'pubmed', 'missing search term'], ['term', 'NCC', 'missing target database']];
+          testParameters = [
+            ['db', 'pubmed', 'missing search term'],
+            ['term', 'NCC', 'missing target database']
+          ];
 
       for (var i = 0; i < testParameters.length; i++) {
         searchObject = nickleby.advancedSearch();
@@ -129,7 +132,7 @@ describe('nickleby.makeSearchObject', function() {
       }
     });
 
-    it('should set the usehistory flag as appropriate', function() {
+    it('should set the searchObject.usehistory flag as appropriate', function() {
       var searchObjectWithHistory = nickleby.advancedSearch()
         .searchParam('db', 'pubmed')
         .searchParam('term', 'NCC')
@@ -148,22 +151,17 @@ describe('nickleby.makeSearchObject', function() {
     //
     // Will hold off on this - it could be a lot of work, though it's definitely an
     // important thing to test.
-  
   });
 
   describe('#getSearchResults', function() {
 
     it('should log its progress', function() {
-      var searchObject = nickleby.advancedSearch()
-        .searchParam('db', 'pubmed')
-        .searchParam('term', 'NCC')
-        .getSearchResults();
-
+    // TODO Need to find a way to set debug/production flags and toggle logging output as
+    // appropriate.
     });
     it('should limit the rate of outgoing requests');
     // I would like to implement this but can't think of a way that
     // wouldn't be easy to circumvent. It might be easiest to remind
     // users of NCBI's limits.
-
   });
 });
