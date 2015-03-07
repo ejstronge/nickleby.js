@@ -29,14 +29,17 @@ var makeSearchObject = function(searchOptions) {
 
   searchOptions = searchOptions || {};
 
-  var eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
+  var that = this,
+      eutilBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
       searchUrl = 'esearch.fcgi?',
+      searchData = Q(),
       // Using a makeshift set; ignore the values for the databases keys
       // XXX More databases will be supported over time!
       databases = {'pubmed':1},
       defaultSearchParams = {
 
-        // See http://www.ncbi.nlm.nih.gov/books/NBK25499/ for details unless otherwise noted
+        // See http://www.ncbi.nlm.nih.gov/books/NBK25499/ for details unless
+        // otherwise noted
 
         'db': null, // Database to search
         'term': null, // Search query
@@ -65,7 +68,7 @@ var makeSearchObject = function(searchOptions) {
         //  - field: database field to query with search term; varies by database
         //
         //    pubmed fields: 
-        //      http://www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.Search_Field_Descrip
+        //    www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.Search_Field_Descrip
         'field': null,
         //
         // Date parameters
@@ -79,49 +82,8 @@ var makeSearchObject = function(searchOptions) {
           {},
           defaultSearchParams,
           // If we're passed an advanced search object, extract its parameters
-          'getAllSearchParams' in searchOptions ? searchOptions.getAllSearchParams() : searchOptions),
-      searchResults = {
-        // True after query submission. Resets to false when any parameters change
-        'submitted': false,
-        'success': null,
-        // If a search succeeds, searchResults.data will be contain the 
-        // results. Otherwise, it will contain an error message, if 
-        // one was available.
-        //
-        // Note the search data may indicate a failed search due to inappropriate
-        // parameters. Such a situation is *not* handled in the library.
-        'data': {}
-      };
-
-  /**
-   * Get or set an attribute on this SearchObject.
-   *
-   * Only attributes which are present in defaultSearchParams
-   * may be set with this function.
-   *
-   * @param {String} attr - Attribute to be returned or modified.
-   * @param {String} [newVal] - When specified, the new value of attr.
-   * @return {String|Number|Object} Returns either the value of attr if newVal isn't specified or `this`.
-   *
-   */
-  var searchParam = function(attr, newVal) {
-    if (!(attr in defaultSearchParams)) {
-      console.log("quitting since " + attr + " is an invalid property");
-      throw new TypeError('Received invalid attribute ' + attr + '.');
-    }
-    if (arguments.length == 2) {
-      allSearchParams[attr] = newVal; 
-
-      // Don't allow the user to set incorrect database values
-      if (attr === 'db' && !(newVal in databases)) { 
-        throw new TypeError('Unrecognized NCBI database: ' + newVal);
-      }
-      searchResults.submitted = false;
-      return this;
-    } else {
-      return allSearchParams[attr];
-    }
-  };
+          'getAllSearchParams' in searchOptions ? 
+              searchOptions.getAllSearchParams() : searchOptions);
 
   /**
    * Construct a URL from the parameters used to create
@@ -149,47 +111,134 @@ var makeSearchObject = function(searchOptions) {
     return eutilBase + searchUrl + $.param(finalParams);
   };
 
-  var getSearchResults = function() {
-    if (searchResults.submitted) {
-      return searchResults;
-    } else {
-      // TODO With Q, it should be easy to add a delay to respect NCBI rate limits
-      return Q($.ajax({
-            url: getQueryUrl(),
-            type: "GET",
-            dataType: "json"
-          }))
-        .fin(function() {searchResults.submitted = true;})
-        .then(function(data) {
-          searchResults.success = true;
-          searchResults.data = data;
-          return searchResults;
-        })
-        .fail(function(e) {
-          console.log(e);
-          searchResults.success = false;
-          searchResults.data = e.message;
-          return searchResults;
-        });
-    }
-  };
-
   return {
-    // Get or set an attribute on this SearchObject. 
-    //                                                            
-    // Only attributes which are present in defaultSearchParams
-    // may be set with this function.
-    'searchParam': searchParam,
+    // True after query submission. Resets to false when any parameters
+    // change.
+    'submitted': false,
+    // Contains the error message, if any, after an ajax request
+    'ajaxFail': true,
+    // If a search succeeds, searchData will contain a promise that
+    // yields the results. Otherwise, it will contain an error message,
+    // if one was available.
+    //
+    // Note the search data may indicate a failed search due to
+    // inappropriate parameters. Such a situation is *not* handled in
+    // the library.
+    'searchData': null,
 
-    // getSearchResults always returns a promise. Thus, callers won't be able to access
-    // searchResults before results are ready.
-    'getSearchResults': function() {
-      if (!searchResults.submitted) {
-        return getSearchResults();
+    /** 
+     * Get or set an attribute on this SearchObject.
+     *
+     * Only attributes which are present in defaultSearchParams may be
+     * set with this function.
+     *
+     * @param {String} attr - Attribute to be returned or modified.
+     * @param {String} [newVal] - When specified, the new value of attr.
+     * @return {String|Number|Object} Returns either the value of attr
+     * if newVal isn't specified or `this`.
+     */
+    'searchParam': function(attr, newVal) {
+      if (!(attr in defaultSearchParams)) {
+        console.log("quitting since " + attr + " is an invalid property");
+        throw new TypeError('Received invalid attribute ' + attr + '.');
+      }
+      if (arguments.length == 2) {
+        allSearchParams[attr] = newVal; 
+
+        // Don't allow the user to set incorrect database values
+        if (attr === 'db' && !(newVal in databases)) { 
+          throw new TypeError('Unrecognized NCBI database: ' + newVal);
+        }
+        this.submitted = false;
+        return this;
       } else {
-      return Q(searchResults);
+        return allSearchParams[attr];
       }
     },
+
+    /** 
+     * Load search results, based on the search parameters already set
+     * on the search object.
+     *
+     * @return {Object} Returns this search object instance. The
+     * newly-loaded data is in a promise stored in the `searchData`
+     * attribute.
+     */
+    'getSearchResults': function() {
+      var _that = this;
+
+      if (!_that.submitted) {
+        // TODO With Q, it should be easy to add a delay to respect NCBI
+        // rate limits
+        _that.searchData = Q($.ajax({
+              url: getQueryUrl(),
+              type: "GET",
+              dataType: "json"
+            }))
+          .fin(function() {_that.submitted = true;})
+          .then(function(data) {
+            _that.ajaxFail = false;
+            return data;
+          })
+          .fail(function(e) {
+            //console.log(e);  // XXX debug-only
+            _that.ajaxFail = e.message;
+            return {};
+          });
+      }
+      return _that;
+    },
+
+    /**
+     * Load the next set of results from NCBI. Tries to increment the
+     * starting starting record in the most recent set of data by the
+     * maximum number of records to return.
+     *
+     * @param {Number} [retstart] Starting value for the next results set.
+     * @param {Number} [retmax] Number of records to return in next
+     * results set.
+     * @return {Object} This search object.
+     */
+    'getMoreSearchResults': function(retstart, retmax) {
+      var _that = this;
+
+      if (!_that.submitted) {
+        // If either retstart or retmax is specified, we should
+        // update the search object with these values.
+        if (retstart === 'undefined') {
+          retstart = _that.searchParam('retstart');
+        }
+        if (retmax === 'undefined') {
+          retmax = _that.searchParam('retmax');
+        }
+        return _that
+          .searchParam('retstart', retstart).searchParam('retmax', retmax)
+          .getSearchResultsoadData();
+      } else {
+        // Find the retrieval parameters on the most recently submitted
+        // search and increment them as needed
+        _that.searchData
+          .then(function(data) {
+            var newMax = retmax || data.esearchresult.retmax || null,
+                // With a new retmax, we need to avoid missing records.
+                // Thus, we use the old retmax in setting the new
+                // retstart.
+                newStart = +(retstart ||
+                  +(data.esearchresult.retstart) + (+data.esearchresult.retmax) || 0);
+            return _that
+              .searchParam('retmax', newMax)
+              .searchParam('retstart', newStart);
+          })
+          .then(function(searchObject) {
+            searchObject.getSearchResults();
+          });
+        // XXX Need to figure out when the submitted flag is/isn't
+        // set. This seems to underlie the bug I see in loading
+        // subsequent datasets.
+        return _that;
+      }
+    },
+
     'getAllSearchParams': function() {
       return $.extend({}, allSearchParams);
     },
